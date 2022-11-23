@@ -30,5 +30,29 @@ module.exports = {
   OTHER: {
     code: 'UNKNOWN',
     message: 'Unknown Error'
+  },
+  TOKEN_EXPIRED: {
+    code: 'EXPIRED_TOKEN',
+    message: 'Token re-issuance required'
+  },
+  TOKEN_NOT_EXPIRED: {
+    code: 'NOT_EXPIRED_TOKEN',
+    message: 'Not Expired Token'
+  },
+  TOKEN_INVALID: {
+    code: 'INVALID_TOKEN',
+    message: 'Invalid Token'
+  },
+  TOKEN_EMPTY: {
+    code: 'EMPTY_TOKEN',
+    message: 'Token is Empty'
+  },
+  TOKEN_OR_REFRESH_EMPTY: {
+    code: 'EMPTY_TOKEN_OR_REFRESH_TOKEN',
+    message: 'Token or Refresh Token is Empty'
+  },
+  USER_INVALID: {
+    code: 'INVALID_USER',
+    message: 'Please login again'
   }
 }
