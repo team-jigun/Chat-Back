@@ -7,7 +7,7 @@ const authUtil = require("../middlewares/auth").checkToken;
 const encodePassword = require("../modules/crypto");
 const { sign, refresh, isExpired } = require("../middlewares/jwt");
 const {
-  EMPTY_INFO: { USER_ID, USER_PASSWORD, USERNAME },
+  EMPTY_INFO: { USER_ID, USER_PASSWORD, USERNAME, CHANGENAME },
   WRONG_PASSWORD: { IN_KOREAN },
   OTHER,
   EXISTS_ID,
@@ -145,14 +145,10 @@ router.post("/changeUsername", authUtil, async (req, res) => {
     switch (code) {
       case USER_ID.code:
         return res.json(util.fail(USER_ID.code, USER_ID.message));
-      case USER_PASSWORD.code:
-        return res.json(util.fail(USER_PASSWORD.code, USER_PASSWORD.message));
       case NOT_EXISTS_USER.code:
         return res.json(
           util.fail(NOT_EXISTS_USER.code, NOT_EXISTS_USER.message)
         );
-      case IN_KOREAN.code:
-        return res.json(util.fail(IN_KOREAN.code, IN_KOREAN.message));
       case EXISTS_ID.code:
         return res.json(util.fail(EXISTS_ID.code, EXISTS_ID.message));
       default:
