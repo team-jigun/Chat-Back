@@ -1,15 +1,19 @@
-const User = require('../schema/User');
-const jwt = require('jsonwebtoken');
-const { secretKey, options, refreshTokenOptions } = require('./config/jwtOption');
-const ERROR = require('../modules/ERROR');
+const User = require("../schema/User");
+const jwt = require("jsonwebtoken");
+const {
+  secretKey,
+  options,
+  refreshTokenOptions,
+} = require("./config/jwtOptions");
+const ERROR = require("../modules/Error");
 
 module.exports = {
-  sign: async user => {
+  sign: async (user) => {
     const payload = { id: user.id };
 
     return jwt.sign(payload, secretKey, options);
   },
-  verify: async token => {
+  verify: async (token) => {
     let decoded;
 
     try {
@@ -20,10 +24,10 @@ module.exports = {
 
       let errorCode = OTHER.code;
       let errorMessage = OTHER.message;
-      if (message === 'jwt expired') {
+      if (message === "jwt expired") {
         errorCode = TOKEN_EXPIRED.code;
         errorMessage = TOKEN_EXPIRED.message;
-      } else if (message === 'invalid token') {
+      } else if (message === "invalid token") {
         errorCode = TOKEN_INVALID.code;
         errorMessage = TOKEN_INVALID.message;
       }
@@ -34,7 +38,7 @@ module.exports = {
 
     return decoded;
   },
-  refresh: _ => {
+  refresh: (_) => {
     return jwt.sign({}, secretKey, refreshTokenOptions);
   },
   refreshVerify: async (refreshToken, id) => {
@@ -52,15 +56,15 @@ module.exports = {
       return false;
     }
   },
-  isExpired: token => {
+  isExpired: (token) => {
     if (!token) return true;
-    
+
     try {
       jwt.verify(token, secretKey);
     } catch (error) {
-      if (error.message === 'jwt expired') return true;
+      if (error.message === "jwt expired") return true;
     }
 
     return false;
-  }
-}
+  },
+};

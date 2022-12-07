@@ -1,65 +1,77 @@
-const express = require('express');
-const cors = require('cors');
+const express = require("express");
+const cors = require("cors");
 const app = express();
 
-app.use(express.urlencoded({extended: false}));
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
 
-const commonRouter = require('./routes/common');
-app.use('/common', commonRouter);
+const commonRouter = require("./routes/common");
+app.use("/common", commonRouter);
 
-const userRouter = require('./routes/user');
-app.use('/user', userRouter);
+const userRouter = require("./routes/user");
+app.use("/user", userRouter);
 
 const socketPort = process.env.SOCKET_PORT || 3001;
-const { Server } = require('socket.io');
-const { OTHER, TOKEN_OR_REFRESH_EMPTY, TOKEN_EXPIRED, TOKEN_INVALID } = require('./modules/ERROR');
-const { checkTokenSocket } = require('./middlewares/auth');
-const jwt = require('jsonwebtoken');
+const { Server } = require("socket.io");
+const {
+  TOKEN_OR_REFRESH_EMPTY,
+  TOKEN_EXPIRED,
+  TOKEN_INVALID,
+  OTHER,
+} = require("./modules/Error");
+const { checkTokenSocket } = require("./middlewares/auth");
+const jwt = require("jsonwebtoken");
 const io = new Server(socketPort);
 
 io.use(async (socket, next) => {
   try {
-    console.log('test1');
     await checkTokenSocket(socket.request);
 
     next();
-  } catch (error) {
-    const { code } = error;
+  } catch (err) {
+    const { code } = err;
     let errorObject = OTHER;
 
-    if (code === TOKEN_OR_REFRESH_EMPTY.code) {
-      errorObject = TOKEN_OR_REFRESH_EMPTY;
-    } else if (code === TOKEN_EXPIRED.code) {
-      errorObject = TOKEN_EXPIRED;
-    } else if (code === TOKEN_INVALID.code) {
-      errorObject = TOKEN_INVALID;
+    switch (code) {
+      case TOKEN_OR_REFRESH_EMPTY.code:
+        errorObject = TOKEN_OR_REFRESH_EMPTY;
+        break;
+      case TOKEN_EXPIRED.code:
+        errorObject = TOKEN_EXPIRED;
+        break;
+      case TOKEN_INVALID.code:
+        errorObject = TOKEN_INVALID;
+        break;
     }
 
     console.log(errorObject.message);
-    next(error);
+    next(err);
   }
 });
 
 io.use((socket, next) => {
   try {
-    console.log('test2');
-    const token = socket.request.headers.authorization.replace('Bearer ', '');
+    const token = socket.request.headers.authorization.replace("Bearer ", "");
 
     socket.userId = jwt.decode(token).id;
     next();
-  } catch (error) {
-    next(error);
+  } catch (err) {
+    next(err);
   }
-})
+});
 
-io.on('connection', socket => {
-  console.log(`connection! ${socket.userId}`);
+const chatHandler = require("./routes/handler/chatHandler");
+io.on("connection", async (socket) => {
+  console.log(`CONNECTION SOCKET ON ${socket.userId}`);
+  socket.emit("init", await chatHandler.getChatLogs());
 
-  socket.on('message', message => {
-    console.log(message);
-    socket.emit('test', 'test');
+  socket.on("message", async (message) => {
+    const newMessage = await chatHandler.getChatLog(socket.userId, message);
+
+    await newMessage.save();
+
+    io.emit("message", newMessage);
   });
 });
 
