@@ -114,8 +114,51 @@ router.post('/signIn', async (req, res) => {
 });
 
 // 1. 임의 User의 name을 바꾸는 API를 구현하시면 됩니다.
-router.post('/changeUsername', authUtil, async (req, res) => {
-  return res.json(util.success('test', 'test', 'test'));
+router.post("/changeUsername", authUtil, async (req, res) => {
+
+  const id = req.body;
+  const changeUsername = req.body;
+  const user = await User.findOne({ id });
+
+  try {
+    if (!id) {
+      throw USER_ID;
+    } else if (!changeUsername) {
+      throw changeUsername;
+    }
+
+    if (!user) {
+      throw NOT_EXISTS_USER;
+    }
+
+    await User.updateOne({ id: user.id }, { $set: { name: changeUsername } });
+
+    return res.json(
+      util.success("SUCCESS_CHANGE_USER_NAME", "Success change user name!")
+    );
+  } catch ({ code, message }) {
+    switch (code) {
+      case USER_ID.code:
+        return res.json(util.fail(USER_ID.code, USER_ID.message));
+
+      case USER_PASSWORD.code:
+        return res.json(util.fail(USER_PASSWORD.code, USER_PASSWORD.message));
+        
+      case NOT_EXISTS_USER.code:
+        return res.json(
+          util.fail(NOT_EXISTS_USER.code, NOT_EXISTS_USER.message)
+        );
+      case IN_KOREAN.code:
+        return res.json(util.fail(IN_KOREAN.code, IN_KOREAN.message));
+
+      case EXISTS_ID.code:
+        return res.json(util.fail(EXISTS_ID.code, EXISTS_ID.message));
+        
+      default:
+        console.log(message);
+        return res.json(util.fail(OTHER.code, OTHER.message));
+    }
+  }
 });
 
 module.exports = router;
