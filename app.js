@@ -61,12 +61,17 @@ io.use((socket, next) => {
   }
 });
 
+const chatHandler = require("./routes/handler/chatHandler");
 io.on("connection", async (socket) => {
-  console.log("CONNECTION SOCKET");
+  console.log(`CONNECTION SOCKET ON ${socket.userId}`);
+  socket.emit("init", await chatHandler.getChatLogs());
 
-  socket.on("message", (message) => {
-    console.log(message);
-    socket.emit("test", "test");
+  socket.on("message", async (message) => {
+    const newMessage = await chatHandler.getChatLog(socket.userId, message);
+
+    await newMessage.save();
+
+    io.emit("message", newMessage);
   });
 });
 
