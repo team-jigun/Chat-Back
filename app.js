@@ -21,7 +21,6 @@ const io = new Server(socketPort);
 
 io.use(async (socket, next) => {
   try {
-    console.log('test1');
     await checkTokenSocket(socket.request);
 
     next();
@@ -44,7 +43,6 @@ io.use(async (socket, next) => {
 
 io.use((socket, next) => {
   try {
-    console.log('test2');
     const token = socket.request.headers.authorization.replace('Bearer ', '');
 
     socket.userId = jwt.decode(token).id;
@@ -52,14 +50,19 @@ io.use((socket, next) => {
   } catch (error) {
     next(error);
   }
-})
+});
 
-io.on('connection', socket => {
+const chatHandler = require('./routes/handler/chatHandler');
+
+io.on('connection', async socket => {
   console.log(`connection! ${socket.userId}`);
+  socket.emit('init', await chatHandler.getChatLogs());
 
-  socket.on('message', message => {
-    console.log(message);
-    socket.emit('test', 'test');
+  socket.on('message', async message => {
+    const newMessage = await chatHandler.getChatLog(socket.userId, message);
+
+    await newMessage.save();
+    socket.emit('message', newMessage);
   });
 });
 
